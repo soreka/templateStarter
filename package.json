@@ -1,0 +1,18 @@
+{
+  "name": "connevia-app-root",
+  "private": true,
+  "scripts": {
+    "dev:server": "pnpm -C connevia-server dev",
+    "dev:mobile": "pnpm -C connevia start",
+    "typecheck": "pnpm -C connevia-server typecheck && pnpm -C connevia tsc --noEmit"
+  },
+  "extra": {
+    "EXPO_PUBLIC_API_URL": "https://<your-render-service>.onrender.com"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.5.2"
+  }
+}
