@@ -15,7 +15,7 @@
   - Exposes a health endpoint and basic auth-protected example routes.
 
 - **Environment & Config**
-  - Client reads public config (API URL, Auth0 config) from Expo `extra` / env variables.
+  - Client reads public config (API URL, Auth0 config) from Expo `extra` / env variables via `ENV` helpers.
   - Server reads and validates env vars with Zod (`ENV` object) to ensure required values are present and correctly shaped.
 
 ---
@@ -28,19 +28,21 @@
   - `package.json`, `pnpm-lock.yaml`, `tailwind.config.js` – workspace tooling.
 
 - **Client (`connevia/`)**
-  - `App.tsx` – root React component registered by `index.ts`.
+  - `App.tsx` – root React component registered by `index.ts`; currently renders the custom login UI as the main screen.
   - `index.ts` – calls `registerRootComponent(App)` (Expo entrypoint).
   - `app.json` – Expo project config (including `extra` env values).
   - `global.css` / `tailwind.config.js` – styling / NativeWind setup.
   - `src/`
-    - `api.ts` – shared Axios client and token helpers.
-    - `config.ts` – app-level configuration (reads env values for API base and Auth0).
-    - `config/env.ts` – Expo-specific helper to read public env keys from `extra` and process env.
-    - `auth/useAuth.ts` – custom React hook that drives Auth0 login/logout and token exchange.
+    - `api.ts` – shared Axios client and token helpers; uses `ENV.API_URL` as `baseURL` and injects `Authorization: Bearer <token>` via an interceptor.
+    - `config.ts` – app-level configuration built from Expo `extra` / env (`EXPO_PUBLIC_*` keys) for API base and Auth0.
+    - `config/env.ts` – Expo-specific helper to read public env keys from `Constants.expoConfig?.extra` / `process.env` and expose `ENV` (including `API_URL`, `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_AUDIENCE`).
+    - `auth/useAuth.ts` – custom React hook that drives Auth0 login/logout and token exchange, and can call `/v1/me` to populate `user`.
+    - `features/auth/LoginScreen.tsx` – main login UI built with Arabic copy and the shared UI components.
+    - `components/UI/*` – shared design‑system components such as `AppButton`, `AppInput`, and `AppCard`.
     - `screens/`
-      - `AuthTestScreen.tsx` – test screen to log in, call `/v1/me`, and log out.
+      - `AuthTestScreen.tsx` – test screen to log in with Auth0, call `/v1/me`, and log out (still available for end‑to‑end auth testing).
       - `DebugEnv.tsx` – debug screen to introspect env and Expo `extra` values.
-      - (other experimental screens as needed).
+      - (other experimental screens as needed, e.g. `TryOut`, `debugRedirectUri`).
     - `rainy.tsx` – simple test component for UI / styling.
 
 - **Server (`connevia-server/`)**
@@ -62,7 +64,7 @@
 - **`useAuth` hook (`src/auth/useAuth.ts`)**
   - Manages local auth state: `accessToken`, `isLoading`, `error`.
   - Uses `AuthSession.useAutoDiscovery` to discover Auth0 OpenID configuration.
-  - Computes a **redirect URI** via `AuthSession.makeRedirectUri({ scheme: CONFIG.auth0.scheme })`.
+  - Computes a **redirect URI** via `AuthSession.makeRedirectUri({ path: 'login-callback' })` (must match the Auth0 callback configuration).
   - Creates an Auth request with `AuthSession.useAuthRequest` using:
     - `clientId`, `redirectUri`, standard OIDC scopes (`openid`, `profile`, `email`).
     - `extraParams.audience` to obtain an access token for the API.
@@ -87,7 +89,7 @@
 
 - **`api` client (`src/api.ts`)**
   - Exposes a singleton `axios` instance:
-    - `baseURL` = `CONFIG.apiBase` (API root, e.g. `https://connevia.onrender.com`).
+    - `baseURL` = `ENV.API_URL` (API root, e.g. `https://connevia.onrender.com`).
   - Attaches an interceptor to automatically add `Authorization: Bearer <token>` on each request if a token is stored.
   - Provides helper functions to `getAccessToken` / `setAccessToken` via `expo-secure-store`.
 

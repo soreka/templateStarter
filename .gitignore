@@ -1,0 +1,31 @@
+# ============================================================
+# Connevia workspace — parent-level .gitignore
+#
+# The parent repo's remote (soreka/templateStarter) is PUBLIC.
+# Anything agent-driven, operationally sensitive, or machine-local
+# must NEVER be tracked here. Real code commits happen inside the
+# two subrepos (connevia/ and connevia-server/), NOT at this level.
+# ============================================================
+
+# --- Agentic workflow (operational docs, agent configs, IDE-AI state) ---
+STATUS.md
+CLAUDE.md
+.claude/
+.cursor/
+.windsurf*
+WINDSURF_RULES.md
+
+# --- Dependencies (should never be in git) ---
+node_modules/
+
+# --- Local build / dev state ---
+.expo/
+dist/
+build/
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
